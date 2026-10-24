@@ -5,6 +5,10 @@ on:
     branches: [ main, master ]
   workflow_dispatch:
 
+permissions:
+  contents: read
+  packages: read
+
 jobs:
   build:
     name: Build BiliPai APK
@@ -20,6 +24,9 @@ jobs:
           distribution: 'temurin'
           java-version: '21'
 
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
 
@@ -27,6 +34,9 @@ jobs:
         run: chmod +x gradlew
 
       - name: Build Dev APK
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_ACTOR: ${{ github.actor }}
         run: ./gradlew assembleDev --no-daemon --stacktrace
 
       - name: Upload APK Artifact
