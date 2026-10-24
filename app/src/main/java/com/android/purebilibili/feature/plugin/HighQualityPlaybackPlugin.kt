@@ -116,7 +116,7 @@ object HighQualityPlaybackPlugin : Plugin {
         if (!enabled || serverUrl.isBlank()) return@withContext null
         try {
             val csrf = TokenManager.csrfCache.orEmpty()
-            val wbiKeys = WbiKeyManager.getCachedKeys() ?: WbiKeyManager.refreshKeys().getOrNull()
+            val wbiKeys = WbiKeyManager.getWbiKeys().getOrNull() ?: WbiKeyManager.refreshKeys().getOrNull()
 
             val baseParams = mutableMapOf(
                 "x-bili-locale-json" to """{"c_locale":{"language":"zh-Hans"},"always_translate":false}""",
