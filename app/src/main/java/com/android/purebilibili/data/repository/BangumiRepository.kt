@@ -519,8 +519,23 @@ object BangumiRepository {
                 "📡 getBangumiPlayUrl response: code=${finalResponse.code}, msg=${finalResponse.message}, hasResult=${finalResponse.videoInfo != null}"
             )
             
-            if (finalResponse.code == 0 && finalResponse.videoInfo != null) {
-                val result = finalResponse.videoInfo
+            val effectiveFinalResponse = if (finalResponse.code != 0 || finalResponse.videoInfo == null || finalResponse.videoInfo.dash == null) {
+                val hqJson = com.android.purebilibili.feature.plugin.HighQualityPlaybackPlugin.resolvePgcRaw(
+                    seasonId = seasonId,
+                    episodeId = epId,
+                    qn = qn
+                )
+                if (!hqJson.isNullOrBlank()) {
+                    decodeBangumiPlayUrlPayload(hqJson)
+                } else {
+                    finalResponse
+                }
+            } else {
+                finalResponse
+            }
+
+            if (effectiveFinalResponse.code == 0 && effectiveFinalResponse.videoInfo != null) {
+                val result = effectiveFinalResponse.videoInfo
                 android.util.Log.d(
                     "BangumiRepo",
                     "📹 PlayUrl: quality=${result.quality}, hasDash=${result.dash != null}, " +
@@ -529,13 +544,13 @@ object BangumiRepository {
                 )
                 validateBangumiPlayableVideoInfo(result)
             } else {
-                val errorMsg = when (finalResponse.code) {
+                val errorMsg = when (effectiveFinalResponse.code) {
                     -10403 -> "需要大会员才能观看"
                     -404 -> "视频或课程不存在"
                     -101 -> "请先登录后观看"
                     -400 -> "请求参数错误"
                     -403 -> if (isCourse) "访问权限不足：该课程需购买后观看" else "访问权限不足"
-                    else -> "获取播放地址失败: ${finalResponse.message} (code=${finalResponse.code})"
+                    else -> "获取播放地址失败: ${effectiveFinalResponse.message} (code=${effectiveFinalResponse.code})"
                 }
                 Result.failure(Exception(errorMsg))
             }
