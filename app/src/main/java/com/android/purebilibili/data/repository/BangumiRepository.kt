@@ -117,8 +117,7 @@ internal fun decodeBangumiPlayUrlPayload(
         coerceInputValues = true
     }
 ): BangumiPlayUrlPayload {
-    val normalizedJson = rawJson.replace(Regex(""type"\\s*:\\s*(\\d+)"), ""type":"$1"")
-    val root = json.parseToJsonElement(normalizedJson).jsonObject
+    val root = json.parseToJsonElement(rawJson).jsonObject
     val code = root["code"]?.jsonPrimitive?.intOrNull ?: -1
     val message = root["message"]?.jsonPrimitive?.contentOrNull.orEmpty()
     val resultObject = root["result"] as? JsonObject
