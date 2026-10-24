@@ -119,8 +119,8 @@ object HighQualityPlaybackPlugin : Plugin {
             val wbiKeys = WbiKeyManager.getCachedKeys() ?: WbiKeyManager.refreshKeys().getOrNull()
 
             val baseParams = mutableMapOf(
-                "x-bili-locale-json" to "{"c_locale":{"language":"zh-Hans"},"always_translate":false}",
-                "x-bili-device-req-json" to "{"platform":"web","device":"pc","spmid":"666.25","mobi_app":"web_cn"}"
+                "x-bili-locale-json" to """{"c_locale":{"language":"zh-Hans"},"always_translate":false}""",
+                "x-bili-device-req-json" to """{"platform":"web","device":"pc","spmid":"666.25","mobi_app":"web_cn"}"""
             )
             if (csrf.isNotBlank()) {
                 baseParams["csrf"] = csrf
