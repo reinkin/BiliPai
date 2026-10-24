@@ -520,10 +520,11 @@ object BangumiRepository {
             )
             
             val effectiveFinalResponse = if (finalResponse.code != 0 || finalResponse.videoInfo == null || finalResponse.videoInfo.dash == null) {
+                val targetQn = maxOf(qn, com.android.purebilibili.feature.plugin.HighQualityPlaybackPlugin.maxQuality)
                 val hqJson = com.android.purebilibili.feature.plugin.HighQualityPlaybackPlugin.resolvePgcRaw(
                     seasonId = seasonId,
                     episodeId = epId,
-                    qn = qn
+                    qn = targetQn
                 )
                 if (!hqJson.isNullOrBlank()) {
                     decodeBangumiPlayUrlPayload(hqJson)
