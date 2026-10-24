@@ -1444,8 +1444,22 @@ object VideoRepository {
             throw EmptyPlayUrlPayloadException(riskControl = true)
         }
         if (response.code == 0) {
-            val payload = response.data
-            if (hasPlayableStreams(payload)) {
+            val rawPayload = response.data
+            if (hasPlayableStreams(rawPayload)) {
+                val payload = if (com.android.purebilibili.feature.plugin.HighQualityPlaybackPlugin.enabled &&
+                    (!isLoggedIn || !isPlaybackVip())
+                ) {
+                    val signedUrl = "https://api.bilibili.com/x/player/wbi/playurl?" + signedParams.entries.joinToString("&") { (k, v) ->
+                        "$k=${java.net.URLEncoder.encode(v, "UTF-8")}"
+                    }
+                    com.android.purebilibili.feature.plugin.HighQualityPlaybackPlugin.enhanceUgcPlayUrl(
+                        basePayload = rawPayload!!,
+                        signedPlayUrl = signedUrl,
+                        requestedQn = qn
+                    )
+                } else {
+                    rawPayload
+                }
                 return payload
             }
             com.android.purebilibili.core.util.Logger.w(

@@ -11,6 +11,9 @@ import com.android.purebilibili.core.plugin.PluginManager
 import com.android.purebilibili.core.network.WbiUtils
 import com.android.purebilibili.core.network.WbiKeyManager
 import com.android.purebilibili.core.store.TokenManager
+import com.android.purebilibili.data.model.response.PlayUrlData
+import com.android.purebilibili.data.model.response.PlayUrlResponse
+import kotlinx.serialization.decodeFromString
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.*
@@ -100,6 +103,59 @@ object HighQualityPlaybackPlugin : Plugin {
             put("csrf", csrf)
             put("face", "")
             put("name", "")
+        }
+    }
+
+    suspend fun enhanceUgcPlayUrl(
+        basePayload: PlayUrlData,
+        signedPlayUrl: String,
+        requestedQn: Int
+    ): PlayUrlData = withContext(Dispatchers.IO) {
+        if (!enabled || serverUrl.isBlank()) return@withContext basePayload
+        try {
+            val hqJson = resolveUgc(signedPlayUrl) ?: return@withContext basePayload
+            val json = Json {
+                ignoreUnknownKeys = true
+                coerceInputValues = true
+            }
+            val hqResponse = json.decodeFromString<PlayUrlResponse>(hqJson)
+            val hqData = hqResponse.data ?: return@withContext basePayload
+            val hqDash = hqData.dash ?: return@withContext basePayload
+
+            val currentDash = basePayload.dash
+            val mergedVideos = if (currentDash?.video != null) {
+                val existingIds = currentDash.video.map { it.id }.toSet()
+                val newTracks = hqDash.video.filter { it.id !in existingIds || it.id >= 112 }
+                val remaining = currentDash.video.filter { it.id !in newTracks.map { t -> t.id }.toSet() }
+                (newTracks + remaining).sortedByDescending { it.id }
+            } else {
+                hqDash.video
+            }
+
+            val mergedAudios = currentDash?.audio ?: hqDash.audio
+            val newDash = (currentDash ?: hqDash).copy(
+                video = mergedVideos,
+                audio = mergedAudios,
+                duration = if (hqDash.duration > 0) hqDash.duration else currentDash?.duration ?: 0
+            )
+
+            val mergedQuality = maxOf(basePayload.quality, hqData.quality)
+            val mergedAcceptQuality = ((hqData.acceptQuality ?: emptyList()) + (basePayload.acceptQuality ?: emptyList()))
+                .distinct()
+                .sortedDescending()
+            val mergedAcceptDesc = ((hqData.acceptDescription ?: emptyList()) + (basePayload.acceptDescription ?: emptyList()))
+                .distinct()
+
+            android.util.Log.d("HighQualityPlugin", "enhanceUgcPlayUrl: upgraded quality=${basePayload.quality}->${mergedQuality}, trackCount=${mergedVideos.size}")
+            basePayload.copy(
+                quality = mergedQuality,
+                dash = newDash,
+                acceptQuality = mergedAcceptQuality,
+                acceptDescription = mergedAcceptDesc
+            )
+        } catch (e: Exception) {
+            android.util.Log.w("HighQualityPlugin", "enhanceUgcPlayUrl failed: ${e.message}")
+            basePayload
         }
     }
 

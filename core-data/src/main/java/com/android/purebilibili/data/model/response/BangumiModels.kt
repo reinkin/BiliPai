@@ -4,6 +4,37 @@ package com.android.purebilibili.data.model.response
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import com.android.purebilibili.core.util.IdUtils
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.descriptors.PrimitiveKind
+import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
+import kotlinx.serialization.json.JsonDecoder
+import kotlinx.serialization.json.JsonPrimitive
+
+object FlexibleStringSerializer : KSerializer<String> {
+    override val descriptor: SerialDescriptor =
+        PrimitiveSerialDescriptor("FlexibleStringSerializer", PrimitiveKind.STRING)
+
+    override fun deserialize(decoder: Decoder): String {
+        return when (val jsonDecoder = decoder as? JsonDecoder) {
+            null -> runCatching { decoder.decodeString() }.getOrDefault("")
+            else -> {
+                val element = jsonDecoder.decodeJsonElement()
+                if (element is JsonPrimitive) {
+                    element.content
+                } else {
+                    element.toString()
+                }
+            }
+        }
+    }
+
+    override fun serialize(encoder: Encoder, value: String) {
+        encoder.encodeString(value)
+    }
+}
 
 
 // ========== 番剧/影视响应模型 ==========
@@ -475,6 +506,7 @@ data class BangumiPlayUrlResponse(
 data class BangumiVideoInfo(
     val fnver: Int = 0,
     val fnval: Int = 0,
+    @Serializable(with = FlexibleStringSerializer::class)
     val type: String = "",
     val bp: Int = 0,
     @SerialName("vip_type")
