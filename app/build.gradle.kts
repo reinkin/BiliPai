@@ -202,9 +202,6 @@ android {
         create("dev") {
             // Dev 保持“接近发布”的验证语义，不用于日常本地快速迭代。
             initWith(getByName("release"))
-            applicationIdSuffix = ".dev"
-            versionNameSuffix = "-dev"
-            resValue("string", "app_name", "BiliPai Dev")
             buildConfigField("boolean", "ALLOW_HARDCODED_DNS_FALLBACK", "true")
             buildConfigField("boolean", "ENABLE_VERBOSE_DEBUG_LOGS", "false")
             buildConfigField("boolean", "ENABLE_VERBOSE_RUNTIME_LOG_PERSISTENCE", "false")
