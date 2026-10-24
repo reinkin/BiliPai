@@ -34,7 +34,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_ACTOR: ${{ github.actor }}
-        run: ./gradlew assembleDev --no-daemon --stacktrace
+          GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx4096m -Dkotlin.daemon.jvmargs=-Xmx4096m"
+        run: ./gradlew assembleDev --stacktrace
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
