@@ -458,6 +458,7 @@ class PureApplication : Application(), SingletonImageLoader.Factory, ComponentCa
         //  [BiliPai 移植] 推荐流过滤(默认关闭, 可在插件中心启用)
         PluginManager.register(com.android.purebilibili.feature.plugin.BiliPaiFeedFilterPlugin())
         PluginManager.register(com.android.purebilibili.feature.plugin.SubscriptionFeedPlugin())
+        PluginManager.register(com.android.purebilibili.feature.plugin.HighQualityPlaybackPlugin)
         Logger.d(PureApplicationRuntimeConfig.TAG, " Plugin system initialized with 11 built-in plugins")
 
         AppScope.ioScope.launch {
