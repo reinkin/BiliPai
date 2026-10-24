@@ -13,29 +13,6 @@ import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.JsonDecoder
 import kotlinx.serialization.json.JsonPrimitive
 
-object FlexibleStringSerializer : KSerializer<String> {
-    override val descriptor: SerialDescriptor =
-        PrimitiveSerialDescriptor("FlexibleStringSerializer", PrimitiveKind.STRING)
-
-    override fun deserialize(decoder: Decoder): String {
-        return when (val jsonDecoder = decoder as? JsonDecoder) {
-            null -> runCatching { decoder.decodeString() }.getOrDefault("")
-            else -> {
-                val element = jsonDecoder.decodeJsonElement()
-                if (element is JsonPrimitive) {
-                    element.content
-                } else {
-                    element.toString()
-                }
-            }
-        }
-    }
-
-    override fun serialize(encoder: Encoder, value: String) {
-        encoder.encodeString(value)
-    }
-}
-
 
 // ========== 番剧/影视响应模型 ==========
 
